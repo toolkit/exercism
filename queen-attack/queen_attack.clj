@@ -1,5 +1,6 @@
 (ns queen-attack
-  (:require [clojure.pprint :refer [pprint]]
+  (:require [clojure.set :refer [subset?]]
+            [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join]]))
 
 (defn empty-board [size]
@@ -18,29 +19,43 @@
         board (update-board board queens)]
     (to-str board)))
 
+(defn rows [board]
+  (map #(apply sorted-set %) board))
+
+(defn columns [board]
+  (map #(apply sorted-set %) (apply map vector board)))
+
+(defn diagonal
+  "Return a sequence of [x y] coords. These may go outside the board's dimensions
+  It is the responsibility of a subsequent get-in call to fill in nils for the
+  invalid coordinates, and then use set membership to determine if a diagonal
+  contains both W and B"
+  [y step size]
+  (take size (iterate (fn [[x y]] [(inc x) (+ step y)]) [0 y])))
+
+(defn diagonals [board]
+  (let [size (count board)]
+    (for [step [1 -1] y (range (- size) (* size 2))]
+      (apply sorted-set (map #(get-in board % nil) (diagonal y step size))))))
+
+(defn can-attack? [s]
+  (subset? #{"W" "B"} s))
+
+(can-attack? #{"W" "B"})
+
 (defn can-attack [queens]
   (let [board (empty-board 8)
         board (update-board board queens)
-        row-sets (map set board)
-        col-sets (map set (apply map vector board))]
-    nil))
+        sets (concat (rows board) (columns board) (diagonals board))]
+    (not (nil? (some can-attack? sets)))))
 
-(defn row-sets [board]
-  (map set board))
-
-(defn column-sets [board]
-  (map set (apply map vector board)))
-
+;; x is top (0) to bottom, y is left (0) to right
 (def test-board
-  [[000 001 002 003 004 005 006 007]
-   [010 011 012 013 014 015 016 017]
-   [020 021 022 023 024 025 026 027]
-   [030 031 032 033 034 035 036 037]
-   [040 041 042 043 044 045 046 047]
-   [050 051 052 043 054 055 056 057]
-   [060 061 062 043 064 065 066 067]
-   [070 071 072 043 074 075 076 077]])
-
-(row-sets test-board)
-(column-sets test-board)
-(right-diagonals test-board)
+  [["AA" "AB" "AC" "AD" "AE" "AF" "AG" "AH"]
+   ["BA" "BB" "BC" "BD" "BE" "BF" "BG" "BH"]
+   ["CA" "CB" "CC" "CD" "CE" "CF" "CG" "CH"]
+   ["DA" "DB" "DC" "DD" "DE" "DF" "DG" "DH"]
+   ["EA" "EB" "EC" "ED" "EE" "EF" "EG" "EH"]
+   ["FA" "FB" "FC" "FD" "FE" "FF" "FG" "FH"]
+   ["GA" "GB" "GC" "GD" "GE" "GF" "GG" "GH"]
+   ["HA" "HB" "HC" "HD" "HE" "HF" "HG" "HH"]])
