@@ -1,51 +1,30 @@
 (ns queen-attack
-  (:require [clojure.set :refer [subset?]]
-            [clojure.pprint :refer [pprint]]
+  (:require [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join]]))
 
 (defn empty-board [size]
   (vec (repeat size (vec (repeat size "O")))))
 
-(defn update-board [board {:keys [w b]}]
-  (if (or (nil? w) (nil? b))
-    board
-    (-> board (assoc-in w "W") (assoc-in b "B"))))
+(defn set-position [board position piece]
+  (if position
+    (assoc-in board position piece)
+    board))
 
 (defn to-str [board]
   (str (join "\n" (map #(join " " %) board)) "\n"))
 
-(defn board-string [queens]
-  (let [board (empty-board 8)
-        board (update-board board queens)]
-    (to-str board)))
+(defn board-string [{:keys [w b]}]
+  (-> (empty-board 8)
+      (set-position w "W")
+      (set-position b "B")
+      to-str))
 
-(defn rows [board]
-  (map #(apply sorted-set %) board))
-
-(defn columns [board]
-  (map #(apply sorted-set %) (apply map vector board)))
-
-(defn diagonal
-  "Return a sequence of [x y] coords. These may go outside the board's dimensions
-  It is the responsibility of a subsequent get-in call to fill in nils for the
-  invalid coordinates, and then use set membership to determine if a diagonal
-  contains both W and B"
-  [y step size]
-  (take size (iterate (fn [[x y]] [(inc x) (+ step y)]) [0 y])))
-
-(defn diagonals [board]
-  (let [size (count board)]
-    (for [step [1 -1] y (range (- size) (* size 2))]
-      (apply sorted-set (map #(get-in board % nil) (diagonal y step size))))))
-
-(defn can-attack? [s]
-  (subset? #{"W" "B"} s))
-
-(defn can-attack [queens]
-  (let [board (empty-board 8)
-        board (update-board board queens)
-        sets (concat (rows board) (columns board) (diagonals board))]
-    (not (nil? (some can-attack? sets)))))
+(defn can-attack [{[wx wy] :w [bx by] :b}]
+  (let [dx (- bx wx)
+        dy (- by wy)]
+    (or (zero? dx)
+        (zero? dy)
+        (= (* dx dx) (* dy dy)))))
 
 ;; x is top (0) to bottom, y is left (0) to right
 (def test-board
