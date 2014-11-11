@@ -41,8 +41,6 @@
 (defn can-attack? [s]
   (subset? #{"W" "B"} s))
 
-(can-attack? #{"W" "B"})
-
 (defn can-attack [queens]
   (let [board (empty-board 8)
         board (update-board board queens)
