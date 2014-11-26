@@ -1,6 +1,6 @@
 (ns hexadecimal)
 
-(def hex (zipmap "0123456789abcdef" (range 0 16)))
+(def hex (zipmap "0123456789abcdef" (range)))
 
 (defn hex-to-int [s]
   (try
