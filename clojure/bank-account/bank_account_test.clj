@@ -48,4 +48,4 @@
       (is (= 30 (bank-account/get-balance %1)) %2))))
 
 (run-tests)
-(shutdown-agents) ;; for the pcalls above so the test exits
+;; (shutdown-agents) ;; for the pcalls above so the test exits
